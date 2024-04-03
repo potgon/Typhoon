@@ -1,10 +1,11 @@
 import tensorflow as tf
 import json
 
+from .model_base import ModelBuilder
 from ..window_pipeline import data_processing
 
 
-class LSTMModel:
+class LSTMModel(ModelBuilder):
     def __init__(self, units=50):
         self.window = data_processing("data\datasets\SP500_data.csv")
         self.units = units
