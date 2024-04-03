@@ -2,9 +2,9 @@ import json
 import os
 import tensorflow as tf
 from typing import Optional
-from tortoise.exceptions import BaseORMException
-from tortoise.transactions import in_transaction
+from tortoise.exceptions import DoesNotExist, IntegrityError, OperationalError
 
+from .model_builders.model_factory import ModelFactory
 from database.models import TrainedModel, ModelType, Queue
 from utils.logger import make_log
 
@@ -29,12 +29,12 @@ class Trainer:
                 queue_item = (
                     await Queue.filter(priority=0).order_by("created_at").first()
                 )
-        except BaseORMException as be:
+        except (DoesNotExist, IntegrityError, OperationalError) as e:
             make_log(
                 "TRAINER",
                 40,
                 "trainer_workflow.log",
-                f"Error retrieve queue item: {str(be)}",
+                f"Error retrieve queue item: {str(e)}",
             )
             return None
         if queue_item:
@@ -66,7 +66,18 @@ class Trainer:
         return history
 
     def train(self):
-        self.current_model_instance = self._get_next_queue_item().
+        # Retrieve asset and user for later use
+        queue = self._get_next_queue_item()
+        if queue:
+            built_model = ModelFactory.get_built_model(queue.model_type_id)
+        else:
+            make_log(
+                "TRAINER", 40, "trainer_workflow.log", "Cannot retrieve queue item"
+            )
+            raise TypeError  # Catch this in service module
+        if not built_model:
+            raise TypeError  # Catch this in service module
+        self.current_model_instance = built_model
         self.current_trained_model = self._compile_and_fit(
             self.current_model_instance.model, self.current_model_instance.window
         )
