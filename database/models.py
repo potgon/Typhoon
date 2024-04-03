@@ -19,6 +19,13 @@ class User(Model):
         return f"{self.username} - {self.email}"
 
 
+class Asset(Model):
+    id = fields.IntField(pk=True)
+    ticker = fields.CharField(max_length=20, unique=True)
+    name = fields.CharField(max_length=50)
+    asset_type = fields.CharField(max_length=50)
+
+
 class ModelType(Model):
     id = fields.IntField(pk=True)
     model_name = fields.CharField(max_length=50, unique=True)
@@ -32,16 +39,11 @@ class ModelType(Model):
 
 class TrainedModel(Model):
     model_type = fields.ForeignKeyField(
-        "models.ModelType",
-        null=True,
-        related_name="model_type",
-        on_delete=fields.NO_ACTION,
+        "models.ModelType", null=True, on_delete=fields.NO_ACTION
     )
-    user = fields.ForeignKeyField(
-        "models.User", null=True, related_name="user", on_delete=fields.CASCADE
-    )
+    user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
     asset = fields.ForeignKeyField(
-        "models.Asset", null=True, related_name="asset", on_delete=fields.NO_ACTION
+        "models.Asset", null=True, on_delete=fields.NO_ACTION
     )
     model_name = fields.CharField(max_length=50)
     training_timestamp = fields.DatetimeField(auto_now_add=True)
@@ -57,15 +59,9 @@ class TrainedModel(Model):
 
 
 class Queue(Model):
-    user = fields.ForeignKeyField(
-        "models.User", related_name="user", on_delete=fields.CASCADE
-    )
-    asset = fields.ForeignKeyField(
-        "models.Asset", related_name="asset", on_delete=fields.CASCADE
-    )
-    model_type = fields.ForeignKeyField(
-        "models.ModelType", related_name="model_type", on_delete=fields.CASCADE
-    )
+    user = fields.ForeignKeyField("models.User", on_delete=fields.CASCADE)
+    asset = fields.ForeignKeyField("models.Asset", on_delete=fields.CASCADE)
+    model_type = fields.ForeignKeyField("models.ModelType", on_delete=fields.CASCADE)
     created_at = fields.DatetimeField(auto_now_add=True)
     priority = fields.BooleanField(default=False)
 
