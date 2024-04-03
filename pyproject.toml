@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "typhoon"
+version = "0.1.0"
+description = "On-demand, asset specific, neural network trianing microservice"
+authors = ["otgon <otgon.petru@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.9.13"
+pandas = "^2.2.1"
+numpy = "^1.26.4"
+fastapi = "^0.110.1"
+confluent-kafka = "^2.3.0"
+python-dotenv = "^1.0.1"
+mysqlclient = "^2.2.4"
+tortoise-orm = "^0.20.0"
+matplotlib = "^3.8.3"
+tensorflow-io-gcs-filesystem = "0.27.0"
+tensorflow = "~2.10"
+aerich = "^0.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
