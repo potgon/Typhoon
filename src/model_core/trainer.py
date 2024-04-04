@@ -2,7 +2,7 @@ import json
 import os
 import tensorflow as tf
 from typing import Optional
-from tortoise.exceptions import DoesNotExist, IntegrityError, OperationalError
+from tortoise.exceptions import BaseORMException
 
 from .model_builders.model_factory import ModelFactory
 from database.models import TrainedModel, ModelType, Queue
@@ -29,7 +29,7 @@ class Trainer:
                 queue_item = (
                     await Queue.filter(priority=0).order_by("created_at").first()
                 )
-        except (DoesNotExist, IntegrityError, OperationalError) as e:
+        except BaseORMException as e:
             make_log(
                 "TRAINER",
                 40,
@@ -116,11 +116,24 @@ class Trainer:
         os.remove(save_path)
         return serialized_model
 
-    def _save_new_model(self, model_str):
-        if not ModelType.objects.filter(name=model_str["model_name"]).exists():
-            ModelType(
+    async def _save_new_model(self, model_str) -> Optional[ModelType]:
+        try:
+            model_type_exists = await ModelType.filter(
+                model_name=model_str["model_name"]
+            ).exists()
+        except BaseORMException as e:
+            make_log(
+                "TRAINER",
+                40,
+                "trainer_workflow.log",
+                f"Error saving new model: {str(e)}",
+            )
+            return None
+        if not model_type_exists:
+            new_model = await ModelType.create(
                 name=model_str["model_name"],
                 description=model_str["description"],
                 default_hyperparameters=model_str["default_hyperparameters"],
                 default_model_architecture=model_str["default_model_architecture"],
-            ).save()
+            )
+            return new_model
