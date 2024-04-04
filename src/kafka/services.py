@@ -48,7 +48,7 @@ def get_consumer():
     return consumer
 
 
-async def consumer_loop():
+async def queue_consumer_loop():
     try:
         with get_consumer() as consumer:
             while True:
@@ -111,7 +111,7 @@ async def consumer_loop():
         )
 
 
-async def producer_call(msg) -> tuple:
+async def queue_producer_call(msg) -> tuple:
     try:
         topic = os.getenv("MODEL_QUEUE_TRAIN_TOPIC")
     except KafkaException as ke:
@@ -144,6 +144,14 @@ async def producer_call(msg) -> tuple:
         )
         return (0, "Error sending train request")
     return (1, "Train request successfully sent")
+
+
+async def model_producer_call():
+    pass
+
+
+async def model_consumer_call(msg):
+    pass
 
 
 def delivery_callback(err, msg):

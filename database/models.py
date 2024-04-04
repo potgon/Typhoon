@@ -51,7 +51,28 @@ class TrainedModel(Model):
     hyperparameters = fields.JSONField()
     model_architecture = fields.TextField()
     serialized_model = fields.BinaryField()
-    training_logs = fields.TextField()
+    training_performance = fields.JSONField()
+    status = fields.CharField(max_length=25, default="Inactive")
+
+    def __str__(self):
+        return self.model_name
+
+
+class TempModel(Model):
+    model_type = fields.ForeignKeyField(
+        "models.ModelType", null=True, on_delete=fields.NO_ACTION
+    )
+    user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
+    asset = fields.ForeignKeyField(
+        "models.Asset", null=True, on_delete=fields.NO_ACTION
+    )
+    model_name = fields.CharField(max_length=50)
+    training_timestamp = fields.DatetimeField(auto_now_add=True)
+    performance_metrics = fields.JSONField()
+    hyperparameters = fields.JSONField()
+    model_architecture = fields.TextField()
+    serialized_model = fields.BinaryField()
+    training_performance = fields.JSONField()
     status = fields.CharField(max_length=25, default="Inactive")
 
     def __str__(self):

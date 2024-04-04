@@ -19,6 +19,8 @@ matplotlib = "^3.8.3"
 tensorflow-io-gcs-filesystem = "0.27.0"
 tensorflow = "~2.10"
 aerich = "^0.7.2"
+aiomysql = "^0.2.0"
+yfinance = "^0.2.37"
 
 
 [build-system]

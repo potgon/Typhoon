@@ -7,7 +7,7 @@ services:
       - ${ZOOKEEPER_PORT}:${ZOOKEEPER_PORT}
 
   kafka:
-    image: wurstmeister/kafka
+    image: docker.io/bitnami/kafka:3.6.0
     ports:
       - ${KAFKA_PORT}:${KAFKA_PORT}
     environment:
@@ -20,3 +20,18 @@ services:
       - ./kafka-data:/var/lib/kafka/data
     depends_on:
       - zookeeper
+
+  kafka_init:
+    image: docker.io/bitnami/kafka:3.6.0
+    depends_on:
+      - kafka
+    entrypoint: ["/bin/bash", "-c"]
+    environment:
+      KAFKA_URL: ${KAFKA_HOST}:${KAFKA_PORT}
+      KAFKA_DATA_TOPIC: ${KAFKA_DATA_TOPIC}
+    command: |
+      "
+      echo -e 'Creating kafka topics'
+      kafka-topics.sh --bootstrap-server $${KAFKA_BOOTSTRAP_SERVER} --create --if-not-exists --topic $${KAFKA_DATA_TOPIC} --replication-factor 1 --partitions 3
+      "
+    restart: on-failure
