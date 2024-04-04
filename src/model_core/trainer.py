@@ -5,7 +5,7 @@ from typing import Optional
 from tortoise.exceptions import BaseORMException
 
 from .model_builders.model_factory import ModelFactory
-from database.models import TrainedModel, ModelType, Queue
+from database.models import TrainedModel, ModelType, Queue, TempModel
 from utils.logger import make_log
 
 
@@ -93,20 +93,31 @@ class Trainer:
     def predict(self):
         pass
 
-    def save_model(self, signal):
-        model_str = self.current_model_instance.__str__()
-        self._save_new_model(model_str)
-        if signal:
-            serialized_model = self._serialize_model()
-            TrainedModel(
-                name=model_str["model_name"],
+    async def get_temp_models(selfl):
+        pass
+
+    async def save_temp_model(self) -> Optional[TempModel]:
+        model_dict = self.current_model_instance.to_dict()
+        serialized_model = self._serialize_model()
+        try:
+            model = await TempModel.create(
+                model_name=model_dict["model_name"],
                 performance_metrics=json.dumps(self.performance),
-                hyperparameters=model_str["default_hyperparameters"],
-                model_architecture=model_str["default_model_architecture"],
+                hyperparameters=model_dict("default_hyperparameters"),
+                model_architecture=model_dict["default_model_architecture"],
                 serialized_model=serialized_model,
                 training_logs=json.dumps(self.val_performance),
-                status="Inactive",
-            ).save()
+                status="Temporal",
+            )
+        except BaseORMException as e:
+            make_log(
+                "TRAINER",
+                40,
+                "trainer_workflow.log",
+                f"Error saving temporal model: {str(e)}",
+            )
+            return None
+        return model
 
     def _serialize_model(self):
         save_path = os.getenv("TRAINED_MODEL_SAVE_PATH")
@@ -116,24 +127,36 @@ class Trainer:
         os.remove(save_path)
         return serialized_model
 
-    async def _save_new_model(self, model_str) -> Optional[ModelType]:
+    async def _save_new_model_type(self, model_dict) -> None:
         try:
             model_type_exists = await ModelType.filter(
-                model_name=model_str["model_name"]
+                model_name=model_dict["model_name"]
             ).exists()
         except BaseORMException as e:
             make_log(
                 "TRAINER",
                 40,
                 "trainer_workflow.log",
-                f"Error saving new model: {str(e)}",
+                f"Error retrieving model type: {str(e)}",
             )
             return None
         if not model_type_exists:
             new_model = await ModelType.create(
-                name=model_str["model_name"],
-                description=model_str["description"],
-                default_hyperparameters=model_str["default_hyperparameters"],
-                default_model_architecture=model_str["default_model_architecture"],
+                name=model_dict["model_name"],
+                description=model_dict["description"],
+                default_hyperparameters=model_dict["default_hyperparameters"],
+                default_model_architecture=model_dict["default_model_architecture"],
             )
-            return new_model
+            make_log(
+                "TRAINER",
+                20,
+                "trainer_workflow.log",
+                f"New model type stored: Is ModelType = {new_model} ?",
+            )
+        else:
+            make_log(
+                "TRAINER",
+                20,
+                "trainer_workflow.log",
+                f"Nothing returned. Is None  = {model_type_exists} ?",
+            )
