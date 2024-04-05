@@ -21,6 +21,7 @@ tensorflow = "~2.10"
 aerich = "^0.7.2"
 aiomysql = "^0.2.0"
 yfinance = "^0.2.37"
+aiofiles = "^23.2.1"
 
 
 [build-system]
