@@ -39,11 +39,11 @@ class ModelType(Model):
 
 class TrainedModel(Model):
     model_type = fields.ForeignKeyField(
-        "models.ModelType", null=True, on_delete=fields.NO_ACTION
+        "models.ModelType", null=True, on_delete=fields.CASCADE
     )
     user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
     asset = fields.ForeignKeyField(
-        "models.Asset", null=True, on_delete=fields.NO_ACTION
+        "models.Asset", null=True, on_delete=fields.CASCADE
     )
     model_name = fields.CharField(max_length=50)
     training_timestamp = fields.DatetimeField(auto_now_add=True)
@@ -60,11 +60,11 @@ class TrainedModel(Model):
 
 class TempModel(Model):
     model_type = fields.ForeignKeyField(
-        "models.ModelType", null=True, on_delete=fields.NO_ACTION
+        "models.ModelType", null=True, on_delete=fields.CASCADE
     )
     user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
     asset = fields.ForeignKeyField(
-        "models.Asset", null=True, on_delete=fields.NO_ACTION
+        "models.Asset", null=True, on_delete=fields.CASCADE
     )
     model_name = fields.CharField(max_length=50)
     training_timestamp = fields.DatetimeField(auto_now_add=True)

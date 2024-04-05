@@ -2,19 +2,19 @@ import os
 from tortoise.exceptions import DoesNotExist, IntegrityError, OperationalError
 from typing import Optional, Dict, Type
 
-from .model_base import ModelBuilder
+from .model_base import ModelBase
 from .lstm_model import LSTMModel
 from database.models import ModelType
 from utils.logger import make_log
 
-MODEL_MAPPING = Dict[str, Type[ModelBuilder]] = {
+MODEL_MAPPING = Dict[str, Type[ModelBase]] = {
     os.getenv("LSTM_MODEL_NAME"): LSTMModel,
 }
 
 
 class ModelFactory:
     @staticmethod
-    async def get_built_model(model_type_id: int, **kwargs) -> Optional[ModelBuilder]:
+    async def get_built_model(model_type_id: int, **kwargs) -> Optional[ModelBase]:
         try:
             model_type = await ModelType.filter(id=model_type_id).first()
         except (DoesNotExist, IntegrityError, OperationalError) as e:

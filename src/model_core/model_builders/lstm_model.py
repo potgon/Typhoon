@@ -1,10 +1,10 @@
 import tensorflow as tf
 import json
 
-from .model_base import ModelBuilder
+from .model_base import ModelBase
 
 
-class LSTMModel(ModelBuilder):
+class LSTMModel(ModelBase):
     def __init__(self, asset, units=50):
         super().__init__(asset)
         self.units = units
