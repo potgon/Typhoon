@@ -7,7 +7,7 @@ from typing import Optional, ByteString
 from tortoise.exceptions import BaseORMException
 
 from .model_builders.model_factory import ModelFactory
-from database.models import TrainedModel, ModelType, Queue#, TempModel
+from database.models import TrainedModel, ModelType, Queue  # , TempModel
 from utils.logger import make_log
 
 
@@ -15,47 +15,43 @@ class Trainer:
     def __init__(self):
         self.val_performance = {}
         self.performance = {}
-        self.current_request = None # Queue Instance
+        self.current_request = None  # Queue Instance
         self.priority_counter = 0
-        self.current_model_instance = None # Model Builder Instance
-        self.current_trained_model = None # Keras Model
+        self.current_model_instance = None  # Model Builder Instance
+        self.current_trained_model = None  # Keras Model
 
     async def _get_next_queue_item(
         self,
-    ) -> Optional[Queue]:  # If return is None: continue
+    ) -> Optional[Queue]:
         """Uses self.priority_counter to retrieve the next priority or non-priority item from the queue
 
         Returns:
             Optional[Queue]: Queue instance
         """
-        try:
-            if self.priority_counter < 5:
-                queue_item = (
-                    await Queue.filter(priority=1).order_by("created_at").first()
-                )
-            else:
-                queue_item = (
-                    await Queue.filter(priority=0).order_by("created_at").first()
-                )
-        except BaseORMException as e:
+        if self.priority_counter < 5:
+            queue_item = await Queue.filter(priority=1).order_by("created_at").first()
+        else:
+            queue_item = await Queue.filter(priority=0).order_by("created_at").first()
+
+        if queue_item:
+            self._manage_prio_counter(queue_item.priority)
+            return queue_item
+        else:
             make_log(
                 "TRAINER",
                 40,
                 "trainer_workflow.log",
-                f"Error retrieve queue item: {str(e)}",
+                f"Error retrieving query item: {queue_item}",
             )
             return None
-        if queue_item:
-            self._manage_prio_counter(queue_item)
-            return queue_item
 
-    def _manage_prio_counter(self, queue_item: Queue) -> None:
-        """Keeps track of priority requests completed and manages self.priority_counter
+    def _manage_prio_counter(self, queue_item_priority: int) -> None:
+        """Keeps track of completed priority requests and manages self.priority_counter
 
         Args:
-            queue_item (Queue): Queue instance
+            queue_item_priority (int): Queue item instance priority field
         """
-        if queue_item.priority == 1:
+        if queue_item_priority == 1:
             self.priority_counter += 1
         else:
             self.priority_counter == 0
@@ -96,23 +92,34 @@ class Trainer:
             TypeError: Raised if no queue item could be retrieved
             TypeError: Raised if factory could not return any model instance
         """
-        try:
-            self.current_request = self._get_next_queue_item()
-        except BaseORMException as e:
-            make_log("TRAINER", 40, "trainer_workflow.log", f"Cannot retrieve queue item: {str(e)}")
+        self.current_request = self._get_next_queue_item()
+        if self.current_request is None:
+            make_log(
+                "TRAINER",
+                40,
+                "trainer_workflow.log",
+                f"Cannot retrieve queue item",
+            )
             raise TypeError  # Catch this in service module
-        built_model = ModelFactory.get_built_model(self.current_request.model_type, self.current_request.asset)
-        if not built_model:
-            make_log("TRAINER", 40, "trainer_workflow.log", "Could not retrieve model instance from model factory")
-            raise TypeError  # Catch this in service module
-        self.current_model_instance = built_model
-        self.current_trained_model = self._compile_and_fit(
-            self.current_model_instance.model, self.current_model_instance.window
-        )
+        else:
+            built_model = ModelFactory.get_built_model(
+                self.current_request.model_type, self.current_request.asset
+            )
+            if not built_model:
+                make_log(
+                    "TRAINER",
+                    40,
+                    "trainer_workflow.log",
+                    "Could not retrieve model instance from model factory",
+                )
+                raise TypeError  # Catch this in service module
+            self.current_model_instance = built_model
+            self.current_trained_model = self._compile_and_fit(
+                self.current_model_instance.model, self.current_model_instance.window
+            )
 
     def evaluate(self) -> None:
-        """Stores performance metrics of current trained model
-        """
+        """Stores performance metrics of current trained model"""
         self.val_performance = self.current_trained_model.evaluate(
             self.current_model_instance.window.val
         )
@@ -127,30 +134,30 @@ class Trainer:
             Optional[TrainedModel]: TrainedModel instance
         """
         model_dict = self.current_model_instance.to_dict()
+        self._save_new_model_type(model_dict)
         serialized_model = self._serialize_model()
-        try:
-            model = await TrainedModel.create(
-                model_type = self.current_model_instance,
-                asset = self.current_request.asset,
-                user = self.current_request.user,
-                model_name=model_dict["model_name"],
-                performance_metrics=json.dumps(self.performance),
-                hyperparameters=model_dict["default_hyperparameters"],
-                model_architecture=model_dict["default_model_architecture"],
-                serialized_model=serialized_model,
-                training_logs=json.dumps(self.val_performance),
-                status="Temporal",
-            )
-        except BaseORMException as e:
+
+        model = await TrainedModel.create(
+            model_type=self.current_model_instance,
+            asset=self.current_request.asset,
+            user=self.current_request.user,
+            model_name=model_dict["model_name"],
+            performance_metrics=json.dumps(self.performance),
+            hyperparameters=model_dict["default_hyperparameters"],
+            model_architecture=model_dict["default_model_architecture"],
+            serialized_model=serialized_model,
+            training_logs=json.dumps(self.val_performance),
+            status="Temporal",
+        )
+        if model is None:
             make_log(
                 "TRAINER",
                 40,
                 "trainer_workflow.log",
-                f"Error saving model: {str(e)}",
+                f"Error saving model",
             )
             return None
         return model
-
 
     # async def save_temp_model(self) -> Optional[TempModel]:
     #     model_dict = self.current_model_instance.to_dict()
@@ -182,7 +189,7 @@ class Trainer:
         """Serializes current trained model
 
         Returns:
-            ByteString: ByteString containing Binary serialized model 
+            ByteString: ByteString containing Binary serialized model
         """
         save_path = os.getenv("TRAINED_MODEL_SAVE_PATH")
         self.current_trained_model.save(save_path)
@@ -200,18 +207,10 @@ class Trainer:
         Returns:
             None
         """
-        try:
-            model_type_exists = await ModelType.filter(
-                model_name=model_dict["model_name"]
-            ).exists()
-        except BaseORMException as e:
-            make_log(
-                "TRAINER",
-                40,
-                "trainer_workflow.log",
-                f"Error retrieving model type: {str(e)}",
-            )
-            return None
+        model_type_exists = await ModelType.filter(
+            model_name=model_dict["model_name"]
+        ).exists()
+
         if not model_type_exists:
             new_model = await ModelType.create(
                 name=model_dict["model_name"],
@@ -230,5 +229,5 @@ class Trainer:
                 "TRAINER",
                 20,
                 "trainer_workflow.log",
-                f"Nothing created. Is False  = {model_type_exists} ?",
+                f"Nothing created. Is True  = {model_type_exists} ?",
             )
