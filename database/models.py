@@ -23,7 +23,8 @@ class Asset(Model):
     id = fields.IntField(pk=True)
     ticker = fields.CharField(max_length=20, unique=True)
     name = fields.CharField(max_length=50)
-    asset_type = fields.CharField(max_length=50)
+    sector = fields.CharField(max_length=50, null=True)
+    asset_type = fields.CharField(max_length=50, null=True)
 
 
 class ModelType(Model):
