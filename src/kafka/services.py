@@ -11,7 +11,7 @@ from database.models import Queue
 
 
 @dataclass
-class KafkaModelMessage:
+class KafkaQueueMessage:
     user_id: int
     asset_id: int
     model_type_id: int
@@ -67,7 +67,7 @@ async def queue_consumer_loop():
                         )
                         break
                 try:
-                    data = KafkaModelMessage(**json.loads(msg.value().decode("utf-8")))
+                    data = KafkaQueueMessage(**json.loads(msg.value().decode("utf-8")))
                     user_id = data.user_id
                     asset_id = data.asset_id
                     model_type_id = data.model_type_id
@@ -83,12 +83,12 @@ async def queue_consumer_loop():
                 priority = await User.get(id=user_id).priority
 
                 try:
-                    await Queue.create(
+                    await Queue(
                         user=user_id,
                         asset_id=asset_id,
                         model_type_id=model_type_id,
                         priority=priority,
-                    )
+                    ).save()
                 except Exception as e:
                     make_log(
                         "KAFKA_DB",
@@ -144,14 +144,6 @@ async def queue_producer_call(msg) -> tuple:
         )
         return (0, "Error sending train request")
     return (1, "Train request successfully sent")
-
-
-async def model_producer_call():
-    pass
-
-
-async def model_consumer_call(msg):
-    pass
 
 
 def delivery_callback(err, msg):

@@ -38,13 +38,12 @@ class ModelType(Model):
 
 
 class TrainedModel(Model):
+    id = fields.IntField(pk=True)
     model_type = fields.ForeignKeyField(
         "models.ModelType", null=True, on_delete=fields.CASCADE
     )
     user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
-    asset = fields.ForeignKeyField(
-        "models.Asset", null=True, on_delete=fields.CASCADE
-    )
+    asset = fields.ForeignKeyField("models.Asset", null=True, on_delete=fields.CASCADE)
     model_name = fields.CharField(max_length=50)
     training_timestamp = fields.DatetimeField(auto_now_add=True)
     performance_metrics = fields.JSONField()
@@ -59,13 +58,12 @@ class TrainedModel(Model):
 
 
 class TempModel(Model):
+    id = fields.IntField(pk=True)
     model_type = fields.ForeignKeyField(
         "models.ModelType", null=True, on_delete=fields.CASCADE
     )
     user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
-    asset = fields.ForeignKeyField(
-        "models.Asset", null=True, on_delete=fields.CASCADE
-    )
+    asset = fields.ForeignKeyField("models.Asset", null=True, on_delete=fields.CASCADE)
     model_name = fields.CharField(max_length=50)
     training_timestamp = fields.DatetimeField(auto_now_add=True)
     performance_metrics = fields.JSONField()
@@ -73,18 +71,21 @@ class TempModel(Model):
     model_architecture = fields.TextField()
     serialized_model = fields.BinaryField()
     training_performance = fields.JSONField()
-    status = fields.CharField(max_length=25, default="Inactive")
+    status = fields.CharField(max_length=25, default="Temporal")
 
     def __str__(self):
         return self.model_name
 
 
 class Queue(Model):
+    id = fields.IntField(pk=True)
     user = fields.ForeignKeyField("models.User", on_delete=fields.CASCADE)
     asset = fields.ForeignKeyField("models.Asset", on_delete=fields.CASCADE)
     model_type = fields.ForeignKeyField("models.ModelType", on_delete=fields.CASCADE)
     created_at = fields.DatetimeField(auto_now_add=True)
     priority = fields.BooleanField(default=False)
+    failed_fetch = fields.BooleanField(default=False)
+    failed_fetch_date = fields.DatetimeField()
 
     class Meta:
         ordering = ["priority", "created_at"]
