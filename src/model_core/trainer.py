@@ -4,8 +4,8 @@ import os
 import tensorflow as tf
 from keras.callbacks import History
 from typing import Optional, ByteString
-from tortoise.exceptions import BaseORMException
 
+from .model_builders.model_base import ModelBase
 from .model_builders.model_factory import ModelFactory
 from database.models import TrainedModel, ModelType, Queue  # , TempModel
 from utils.logger import make_log
@@ -15,9 +15,9 @@ class Trainer:
     def __init__(self):
         self.val_performance = {}
         self.performance = {}
-        self.current_request = None  # Queue Instance
+        self.current_request: Queue = None  # Queue Instance
         self.priority_counter = 0
-        self.current_model_instance = None  # Model Builder Instance
+        self.current_model_instance: ModelBase = None  # Model Builder Instance
         self.current_trained_model = None  # Keras Model
 
     async def _get_next_queue_item(
@@ -29,19 +29,33 @@ class Trainer:
             Optional[Queue]: Queue instance
         """
         if self.priority_counter < 5:
-            queue_item = await Queue.filter(priority=1).order_by("created_at").first()
+            queue_item = (
+                await Queue.filter(priority=1, failed_fetch=False)
+                .order_by("created_at")
+                .first()
+            )
         else:
-            queue_item = await Queue.filter(priority=0).order_by("created_at").first()
+            queue_item = (
+                await Queue.filter(priority=0, failed_fetch=False)
+                .order_by("created_at")
+                .first()
+            )
 
         if queue_item:
             self._manage_prio_counter(queue_item.priority)
+            make_log(
+                "TRAINER",
+                20,
+                "trainer_workflow.log",
+                f"Queue item correctly fetched: {queue_item.id}",
+            )
             return queue_item
         else:
             make_log(
                 "TRAINER",
-                40,
+                30,
                 "trainer_workflow.log",
-                f"Error retrieving query item: {queue_item}",
+                f"No queue item found: {queue_item}",
             )
             return None
 
@@ -54,9 +68,15 @@ class Trainer:
         if queue_item_priority == 1:
             self.priority_counter += 1
         else:
-            self.priority_counter == 0
+            self.priority_counter = 0
+        make_log(
+            "TRAINER",
+            20,
+            "trainer_workflow.log",
+            f"Queue priority counter adjusted: {self.priority_counter}",
+        )
 
-    def _compile_and_fit(model, window, epochs=20, patience=2) -> History:
+    def _compile_and_fit(self, model, window, epochs=20, patience=2) -> History:
         """Compiles and fits current model instance to given data window
 
         Args:
@@ -82,6 +102,7 @@ class Trainer:
             validation_data=window.val,
             callbacks=[early_stopping],
         )
+        make_log("TRAINER", 20, "trainer_workflow.log", "Model compiled and fit")
 
         return history
 
@@ -94,29 +115,32 @@ class Trainer:
         """
         self.current_request = self._get_next_queue_item()
         if self.current_request is None:
+            queue_error = "Cannot retrieve queue item"
             make_log(
                 "TRAINER",
                 40,
                 "trainer_workflow.log",
-                f"Cannot retrieve queue item",
+                queue_error,
             )
-            raise TypeError  # Catch this in service module
+            raise TypeError(queue_error)  # Catch this in service module
         else:
             built_model = ModelFactory.get_built_model(
                 self.current_request.model_type, self.current_request.asset
             )
             if not built_model:
+                model_error = "Could not retrieve model instance from model factory"
                 make_log(
                     "TRAINER",
                     40,
                     "trainer_workflow.log",
-                    "Could not retrieve model instance from model factory",
+                    model_error,
                 )
-                raise TypeError  # Catch this in service module
+                raise TypeError(queue_error)  # Catch this in service module
             self.current_model_instance = built_model
             self.current_trained_model = self._compile_and_fit(
                 self.current_model_instance.model, self.current_model_instance.window
             )
+            make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully built")
 
     def evaluate(self) -> None:
         """Stores performance metrics of current trained model"""
@@ -126,6 +150,7 @@ class Trainer:
         self.performance = self.current_trained_model.evaluate(
             self.current_model_instance.window.test, verbose=0
         )
+        make_log("TRAINER", 20, "trainer_workflow.log", "Model evaluation successful")
 
     async def save_model(self) -> Optional[TrainedModel]:
         """Saves current trained model to database
@@ -157,6 +182,7 @@ class Trainer:
                 f"Error saving model",
             )
             return None
+        make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully saved")
         return model
 
     # async def save_temp_model(self) -> Optional[TempModel]:
@@ -196,6 +222,7 @@ class Trainer:
         async with aiofiles.open(save_path, "rb") as file:
             serialized_model = await file.read()
         os.remove(save_path)
+        make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully serialized")
         return serialized_model
 
     async def _save_new_model_type(self, model_dict) -> None:
