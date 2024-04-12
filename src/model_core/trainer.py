@@ -28,19 +28,13 @@ class Trainer:
         Returns:
             Optional[Queue]: Queue instance
         """
-        if self.priority_counter < 5:
-            queue_item = (
-                await Queue.filter(priority=1, failed_fetch=False)
+        
+        queue_item = (
+                await Queue.filter(priority=1 if self.priority_counter < 5 else 0, failed_fetch=False)
                 .order_by("created_at")
                 .first()
             )
-        else:
-            queue_item = (
-                await Queue.filter(priority=0, failed_fetch=False)
-                .order_by("created_at")
-                .first()
-            )
-
+        
         if queue_item:
             self._manage_prio_counter(queue_item.priority)
             make_log(
@@ -123,24 +117,23 @@ class Trainer:
                 queue_error,
             )
             raise TypeError(queue_error)  # Catch this in service module
-        else:
-            built_model = ModelFactory.get_built_model(
-                self.current_request.model_type, self.current_request.asset
+        built_model = ModelFactory.get_built_model(
+            self.current_request.model_type, self.current_request.asset
+        )
+        if not built_model:
+            model_error = "Could not retrieve model instance from model factory"
+            make_log(
+                "TRAINER",
+                40,
+                "trainer_workflow.log",
+                model_error,
             )
-            if not built_model:
-                model_error = "Could not retrieve model instance from model factory"
-                make_log(
-                    "TRAINER",
-                    40,
-                    "trainer_workflow.log",
-                    model_error,
-                )
-                raise TypeError(queue_error)  # Catch this in service module
-            self.current_model_instance = built_model
-            self.current_trained_model = self._compile_and_fit(
-                self.current_model_instance.model, self.current_model_instance.window
-            )
-            make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully built")
+            raise TypeError(queue_error)  # Catch this in service module
+        self.current_model_instance = built_model
+        self.current_trained_model = self._compile_and_fit(
+            self.current_model_instance.model, self.current_model_instance.window
+        )
+        make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully built")
 
     def evaluate(self) -> None:
         """Stores performance metrics of current trained model"""

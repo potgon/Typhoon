@@ -16,6 +16,7 @@ class KafkaQueueMessage:
     asset_id: int
     model_type_id: int
 
+TOPIC = os.getenv("MODEL_QUEUE_TRAIN_TOPIC")
 
 class KafkaProducerSingleton(metaclass=Singleton):
     def __init__(self):
@@ -52,25 +53,23 @@ async def queue_consumer_loop():
     try:
         with get_consumer() as consumer:
             while True:
-                msg = consumer.poll(timeout=1.0)
+                msg = consumer.poll()
                 if msg is None:
                     continue
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:
                         continue
-                    else:
-                        make_log(
-                            "KAFKA_CONSUMER",
-                            40,
-                            "models_workflow.log",
-                            f"Kafka consumer error: {msg.error()}",
-                        )
-                        break
+                    make_log(
+                        "KAFKA_CONSUMER",
+                        40,
+                        "models_workflow.log",
+                        f"Kafka consumer error: {msg.error()}",
+                    )
+                    break
+                
+                
                 try:
                     data = KafkaQueueMessage(**json.loads(msg.value().decode("utf-8")))
-                    user_id = data.user_id
-                    asset_id = data.asset_id
-                    model_type_id = data.model_type_id
                 except json.JSONDecodeError:
                     make_log(
                         "KAFKA_CONSUMER",
@@ -79,6 +78,10 @@ async def queue_consumer_loop():
                         "Error decoding JSON request data",
                     )
                     continue
+                
+                user_id = data.user_id
+                asset_id = data.asset_id
+                model_type_id = data.model_type_id
 
                 priority = await User.get(id=user_id).priority
 
@@ -99,7 +102,6 @@ async def queue_consumer_loop():
                     continue
 
                 consumer.commit(msg)
-        consumer.close()
     except (
         KafkaException
     ) as ke:  # Propagate this error to the caller whenever I implement it
@@ -111,39 +113,14 @@ async def queue_consumer_loop():
         )
 
 
-async def queue_producer_call(msg) -> tuple:
+async def queue_producer_call(msg) -> bool:
+    producer = KafkaProducerSingleton().get_producer()
     try:
-        topic = os.getenv("MODEL_QUEUE_TRAIN_TOPIC")
-    except KafkaException as ke:
-        make_log(
-            "KAFKA_PRODUCER",
-            40,
-            "models_workflow.log",
-            f"Error connecting to topic: {ke.args[0]}",
-        )
-        return (0, "Error sending train request")
-    try:
-        producer = KafkaProducerSingleton().get_producer()
-    except (KafkaException, Exception) as ke:
-        make_log(
-            "KAFKA_PRODUCER",
-            40,
-            "models_workflow.log",
-            f"Error getting Kafka producer: {ke.args[0] if isinstance(ke, KafkaException) else str(ke)}",
-        )
-        return (0, "Error sending train request")
-    try:
-        producer.produce(topic, msg.encode("utf-8"), callback=delivery_callback)
+        producer.produce(TOPIC, msg.encode("utf-8"), on_delivery=delivery_callback)
         producer.flush()
-    except KafkaException as ke:
-        make_log(
-            "KAFKA_PRODUCER",
-            40,
-            "models_workflow.log",
-            f"Error producing message to topic: {ke.args[0]}",
-        )
-        return (0, "Error sending train request")
-    return (1, "Train request successfully sent")
+    except Exception:
+        return False
+    return True
 
 
 def delivery_callback(err, msg):

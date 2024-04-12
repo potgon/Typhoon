@@ -1,17 +1,10 @@
 import os
 import json
-from rest_framework import status
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.mixins import ListModelMixin, CreateModelMixin
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from confluent_kafka import KafkaException
 
-from app.utils.logger import make_log
-from app.evaluation_core.serializers import AssetSerializer
+from utils.logger import make_log
+from kafka.services import delivery_callback, KafkaProducerSingleton
 from ..database.models import ModelType, TrainedModel
-from .serializers import ModelTypeSerializer, TrainedModelSerializer
-from ..src.kafka.services import delivery_callback, KafkaProducerSingleton
 
 
 class ListModelTypeView(GenericViewSet, ListModelMixin):

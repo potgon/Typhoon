@@ -2,8 +2,6 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-import pandas as pd
-
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 root = os.path.join(current_dir, "..", "..", "..")

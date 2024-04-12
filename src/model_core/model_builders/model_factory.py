@@ -15,25 +15,20 @@ MODEL_MAPPING = Dict[str, Type[ModelBase]] = {
 class ModelFactory:
     @staticmethod
     async def get_built_model(model_type_id: int, **kwargs) -> Optional[ModelBase]:
-        try:
-            model_type = await ModelType.filter(id=model_type_id).first()
-        except (DoesNotExist, IntegrityError, OperationalError) as e:
-            make_log(
-                "MODEL_BUILDER",
-                40,
-                "trainer_workflow.log",
-                f"Error retrieving model_type from database: {str(e)}",
-            )
-            return None
+        model_type = await ModelType.filter(id=model_type_id).first()
 
-        model_constructor = MODEL_MAPPING.get(model_type.model_name)
+        if not model_type:
+            make_log("MODEL_BUILDER", 40, "trainer_workflow.log", "No model type found")
+            return None
+        
+        model_constructor = MODEL_MAPPING.get(model_type.model_name, None)
         if model_constructor:
             return model_constructor(**kwargs)
-        else:
-            make_log(
-                "MODEL_BUILDER",
-                40,
-                "trainer_workflow.log",
-                f"No model constructor found for model type: {model_type.model_name}",
-            )
-            return None
+        
+        make_log(
+            "MODEL_BUILDER",
+            40,
+            "trainer_workflow.log",
+            f"No model constructor found for model type: {model_type.model_name}",
+        )
+        

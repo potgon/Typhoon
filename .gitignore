@@ -162,3 +162,5 @@ cython_debug/
 /logs/
 pyright.json
 /.vscode/
+.github/
+.devcontainer/
