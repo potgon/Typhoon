@@ -1,14 +1,19 @@
 from pydantic import BaseModel
 
-class ModelType(BaseModel):
+class ModelTypeModel(BaseModel):
     id: int
     model_name: str
     
-class Asset(BaseModel):
+class AssetModel(BaseModel):
     id: int
     ticker: str
     name: str
+    sector: str | None
+    asset_type: str | None
     
-class User(BaseModel):
+    class Config:
+        orm_mode=True
+    
+class UserModel(BaseModel):
     id: int
     username: str
