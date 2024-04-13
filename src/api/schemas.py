@@ -6,7 +6,10 @@ class ModelTypeModel(BaseModel):
     description: str
     default_hyperparameters: str | None
     default_model_architecture: str | None
-    
+
+    class Config:
+        orm_mode=True
+            
 class AssetModel(BaseModel):
     id: int
     ticker: str
@@ -20,3 +23,15 @@ class AssetModel(BaseModel):
 class UserModel(BaseModel):
     id: int
     username: str
+    
+    class Config:
+        orm_mode=True
+    
+class QueueModel(BaseModel):
+    id: int
+    user: str
+    asset: str
+    model_type: str
+    
+    class Config:
+        orm_mode=True
