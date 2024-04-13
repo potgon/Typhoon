@@ -8,7 +8,3 @@ class Asset(BaseModel):
     id: int
     ticker: str
     name: str
-    
-class User(BaseModel):
-    id: int
-    username: str
