@@ -3,6 +3,9 @@ from pydantic import BaseModel
 class ModelTypeModel(BaseModel):
     id: int
     model_name: str
+    description: str
+    default_hyperparameters: str | None
+    default_model_architecture: str | None
     
 class AssetModel(BaseModel):
     id: int
