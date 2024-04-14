@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from api.routes import assets, models, queue, login, users
+from .routes import assets, models, queue, login, users
 
 api_router = APIRouter()
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Union, Dict
-import yfinances as yf
+import yfinance as yf
 
 from database.models import Asset
 from api.schemas import AssetModel

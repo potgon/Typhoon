@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.post("/")
-async def create_user(user_data: UserCreate) -> Optional[User]:
+async def create_user(user_data: UserCreate) -> Optional[UserCreate]:
     hashed_password = get_password_hash(user_data.password)
     try:
         user = await User(email=user_data.email, password=hashed_password).save()

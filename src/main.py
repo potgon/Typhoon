@@ -13,7 +13,7 @@ register_tortoise(
     app,
     db_url=os.getenv("DB_URL"),
     modules={"models": ["database.models"]},
-    generate_schemas=True,
+    generate_schemas=False,
     add_exception_handlers=True,
 )
 
