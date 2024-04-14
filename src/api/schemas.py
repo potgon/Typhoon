@@ -31,15 +31,6 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
-
-class QueueModel(BaseModel):
-    id: int
-    user: str
-    asset: str
-    model_type: str
-    
-    class Config:
-        orm_mode=True
         
 class Token(BaseModel):
     access_token: str

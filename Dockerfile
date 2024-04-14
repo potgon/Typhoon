@@ -33,4 +33,4 @@ RUN poetry install
 
 COPY . /app
 
-CMD [""]
+CMD ["poetry", "run", "python", "main.py"]
