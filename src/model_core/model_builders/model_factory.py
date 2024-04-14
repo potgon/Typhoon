@@ -18,15 +18,19 @@ class ModelFactory:
         model_type = await ModelType.filter(id=model_type_id).first()
 
         if not model_type:
-            make_log("MODEL_BUILDER", 40, "trainer_workflow.log", "No model type found")
+            make_log("MODEL_FACTORY", 40, "trainer_workflow.log", "No model type found")
             return None
         
         model_constructor = MODEL_MAPPING.get(model_type.model_name, None)
         if model_constructor:
-            return model_constructor(**kwargs)
+            try: 
+                model_constructor(**kwargs)
+                return model_constructor(**kwargs)
+            except TypeError:
+                return None
         
         make_log(
-            "MODEL_BUILDER",
+            "MODEL_FACTORY",
             40,
             "trainer_workflow.log",
             f"No model constructor found for model type: {model_type.model_name}",

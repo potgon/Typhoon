@@ -1,12 +1,18 @@
 import pandas as pd
 import numpy as np
+import yfinance as yf
+from typing import Optional
 
+from utils.logger import make_log
 from window_generator import WindowGenerator
 
 
-def data_init(filepath: str) -> pd.DataFrame:
-    # It'll end up being yf.download()...
-    df = pd.read_csv(filepath)
+def data_init(ticker: str) -> Optional[pd.DataFrame]:
+    #df = pd.read_csv(filepath)
+    df = yf.download(ticker)
+    if df.empty():
+        make_log("WINDOW_PIPELINE", 40, "data_pipeline.log", f"Couldn't download data for {ticker}")
+        raise TypeError
     columns_to_drop = df.columns[df.iloc[0] == 0.0]
     if columns_to_drop:
         df.drop(columns_to_drop, axis=1, inplace=True)
@@ -46,8 +52,8 @@ def data_normalization(train_df, val_df, test_df):
     return train_df, val_df, test_df
 
 
-def data_processing(filepath: str):
-    df = data_init(filepath)
+def data_processing(ticker: str) -> Optional[WindowGenerator]:
+    df = data_init(ticker)
     engineered_df = feature_engineering(df)
     train_df, val_df, test_df = data_split(engineered_df)
     train_df, val_df, test_df = data_normalization(train_df, val_df, test_df)
