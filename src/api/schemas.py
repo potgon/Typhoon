@@ -27,6 +27,11 @@ class UserModel(BaseModel):
     class Config:
         orm_mode=True
     
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
 class QueueModel(BaseModel):
     id: int
     user: str
@@ -35,3 +40,7 @@ class QueueModel(BaseModel):
     
     class Config:
         orm_mode=True
+        
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

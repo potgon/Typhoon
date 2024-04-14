@@ -1,8 +1,7 @@
 import os
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from typing import Generator
 from tortoise.exceptions import MultipleObjectsReturned, DoesNotExist
 
 from database.models import User
@@ -18,7 +17,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
             raise HTTPException(status_code=401, detail="Invalid token")
         try:
             user = await User.get(id=user_id)
-        except (DoesNotExist, MultipleObjectsReturned) as e:
+        except (DoesNotExist, MultipleObjectsReturned):
             raise HTTPException(status_code=404, detail="User not found")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
