@@ -17,4 +17,4 @@ register_tortoise(
     add_exception_handlers=True,
 )
 
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router, prefix=os.getenv("API_V1_STR"))

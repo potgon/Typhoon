@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ModelTypeModel(BaseModel):
@@ -7,9 +7,7 @@ class ModelTypeModel(BaseModel):
     description: str
     default_hyperparameters: str
     default_model_architecture: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
 
 class AssetModel(BaseModel):
@@ -18,21 +16,16 @@ class AssetModel(BaseModel):
     name: str
     sector: str
     asset_type: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserModel(BaseModel):
     id: int
-    username: str
-
-    class Config:
-        from_attributes = True
+    email: str
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(BaseModel):
-    username: str
     email: str
     password: str
 

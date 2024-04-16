@@ -89,6 +89,4 @@ class Queue(Model):
         ordering = ["priority", "created_at"]
 
     def __str__(self):
-        return (
-            f"{self.user.username} - {self.asset.name} - {self.model_type.model_name}"
-        )
+        return f"{self.user.email} - {self.asset.name} - {self.model_type.model_name}"
