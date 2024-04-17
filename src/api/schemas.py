@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 
 class ModelTypeModel(BaseModel):
@@ -14,15 +15,14 @@ class AssetModel(BaseModel):
     id: int
     ticker: str
     name: str
-    sector: str
+    sector: Optional[str]
     asset_type: str
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserModel(BaseModel):
+class UserResponse(BaseModel):
     id: int
     email: str
-    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(BaseModel):
