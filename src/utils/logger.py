@@ -4,11 +4,9 @@ from logging.handlers import RotatingFileHandler
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-root = os.path.join(current_dir, "..", "..", "..")
+root = os.path.join(current_dir, "..", "..")
 
 LOGS_DIR_PROD = os.path.join(root, "logs", "prod")
-
-LOGS_DIR_DEV = os.path.join(root, "logs", "dev")
 
 # LOGS_DIR_DEV = "/app/logs/dev"
 
@@ -16,7 +14,7 @@ loggers = {}
 
 
 def setup_logger(name: str, level: int, log_file: str) -> logging.Logger:
-    log_env_dir = LOGS_DIR_DEV
+    log_env_dir = LOGS_DIR_PROD
     if not os.path.exists(log_env_dir):
         os.makedirs(log_env_dir)
 
