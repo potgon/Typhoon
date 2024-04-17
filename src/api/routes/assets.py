@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Union, Dict
 import yfinance as yf
+from tortoise.exceptions import IncompleteInstanceError, IntegrityError
 
 from database.models import Asset
-from api.schemas import AssetModel
+from api.schemas import AssetModel, AssetCheck
 from utils.logger import make_log
 
 router = APIRouter()
@@ -32,32 +33,54 @@ async def bulk_add(tickers: Union[str, List[str]]) -> Dict[str, Dict[str, str]]:
     if isinstance(tickers, str):
         tickers = [tickers]
 
-    msg_body = {}
+    response = {}
 
     info_dict = {}
-    for asset in tickers:
+    for ticker in tickers:
         try:
-            data = yf.Ticker(asset).info
-            info_dict[asset] = {
-                "ticker": asset,
-                "name": data.get("shortName", None),
-                "asset_type": data.get("quoteType", None),
-                "sector": data.get("sector", None),
-            }
-            await Asset(
-                ticker=asset,
-                name=data.get("shortName", None),
-                asset_type=data.get("quoteType", None),
-                sector=data.get("sector", None),
-            ).save()
-            msg_body[asset] = "Data stored"
+            data = yf.Ticker(ticker).info
         except Exception as e:
             make_log(
                 "ASSETS",
                 40,
                 "api_error.log",
-                f"Error fetching data for {asset}: {str(e)}",
+                f"Error fetching data for {ticker}: {str(e)}",
             )
-            msg_body[asset] = "Error fetching data"
+            response[ticker] = "Error fetching data"
             continue
-    return {"message": msg_body}
+        if data.get("shortName") is None:
+            response[ticker] = "No data found. Ticker might be invalid"
+            continue
+        info_dict[ticker] = {
+            "ticker": ticker,
+            "name": data.get("shortName", None),
+            "asset_type": data.get("quoteType", None),
+            "sector": data.get("sector", None),
+        }
+        try:
+            await Asset(
+                ticker=ticker,
+                name=data.get("shortName", None),
+                asset_type=data.get("quoteType", None),
+                sector=data.get("sector", None),
+            ).save()
+            response[ticker] = "Data stored"
+        except (IncompleteInstanceError) as e:
+            make_log(
+                "ASSETS",
+                40,
+                "api_error.log",
+                f"Error saving asset data to database for {ticker}: {str(e)}",
+            )
+            response[ticker] = "Error saving to database"
+            continue
+        except (IntegrityError) as e:
+            make_log(
+                "ASSETS",
+                40,
+                "api_error.log",
+                f"Asset already present in database? {str(e)}",
+            )
+            response[ticker] = "Asset already present in database"
+            continue
+    return {"message": response}
