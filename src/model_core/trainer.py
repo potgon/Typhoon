@@ -5,9 +5,9 @@ import tensorflow as tf
 from keras.callbacks import History
 from typing import Optional, ByteString
 
-from .model_builders.model_base import ModelBase
-from .model_builders.model_factory import ModelFactory
-from database.models import TrainedModel, ModelType, Queue  # , TempModel
+from model_core.model_builders.model_base import ModelBase
+from model_core.model_builders.model_factory import ModelFactory
+from database.models import TrainedModel, ModelType, Queue
 from utils.logger import make_log
 
 
@@ -21,7 +21,7 @@ class Trainer:
         self.current_trained_model = None  # Keras Model
 
     async def _get_next_queue_item(
-        self,
+        self
     ) -> Optional[Queue]:
         """Uses self.priority_counter to retrieve the next priority or non-priority item from the queue
 
@@ -30,7 +30,7 @@ class Trainer:
         """
         
         queue_item = (
-                await Queue.filter(priority=1 if self.priority_counter < 5 else 0, failed_fetch=False)
+                await Queue.filter(priority=1 if self.priority_counter < 5 else 0)
                 .order_by("created_at")
                 .first()
             )
