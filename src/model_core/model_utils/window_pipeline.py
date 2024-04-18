@@ -1,15 +1,16 @@
+import datetime
 import pandas as pd
 import numpy as np
 import yfinance as yf
-from typing import Optional
+from typing import Optional, Any
 
 from utils.logger import make_log
 from window_generator import WindowGenerator
 
 
-def data_init(ticker: str) -> Optional[pd.DataFrame]:
+def data_init(ticker: str, start: str, end: str) -> Optional[pd.DataFrame]:
     #df = pd.read_csv(filepath)
-    df = yf.download(ticker)
+    df = yf.download(ticker, start=start if start else get_datetimes("start"), end=end if end else get_datetimes("end"))
     if df.empty():
         make_log("WINDOW_PIPELINE", 40, "data_pipeline.log", f"Couldn't download data for {ticker}")
         raise TypeError
@@ -67,3 +68,12 @@ def data_processing(ticker: str) -> Optional[WindowGenerator]:
         test_df=test_df,
         label_columns=["Close"],
     )
+
+def get_datetimes(signal: str) -> Optional[Any]:
+    if signal == "end":
+        return datetime.datetime.now().strftime("%Y-%m-%d")
+    elif signal == "start":
+        current_datetime = datetime.datetime.now()
+        datetime = current_datetime - datetime.timedelta(days=365.25 * 10)
+        return datetime.strftime("Y-%m-%d")
+    return None
