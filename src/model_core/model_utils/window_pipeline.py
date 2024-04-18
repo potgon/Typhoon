@@ -1,3 +1,4 @@
+import os
 import datetime
 import pandas as pd
 import numpy as np
@@ -12,8 +13,12 @@ def data_init(ticker: str, start: str, end: str, interval: str) -> Optional[pd.D
     #df = pd.read_csv(filepath)
     df = yf.download(ticker, start=start if start else get_datetimes("start"), end=end if end else get_datetimes("end"), interval=interval if interval else "1d")
     if df.empty():
-        make_log("WINDOW_PIPELINE", 40, "data_pipeline.log", f"Couldn't download data for {ticker}")
-        raise TypeError
+        make_log("WINDOW_PIPELINE", 40, "data_pipeline.log", f"Couldn't download data for {ticker}, trying with local dataset")
+        local_df = load_local_data(ticker, start, end)
+        if local_df.empty():
+            make_log("WINDOW_PIPELINE", 40, "data_pipeline.log", f"Couldn't access local dataset for {ticker}, might not exist")
+            raise TypeError
+        df = local_df
     columns_to_drop = df.columns[df.iloc[0] == 0.0]
     if columns_to_drop:
         df.drop(columns_to_drop, axis=1, inplace=True)
@@ -76,4 +81,12 @@ def get_datetimes(signal: str) -> Optional[Any]:
         current_datetime = datetime.datetime.now()
         datetime = current_datetime - datetime.timedelta(days=365.25 * 10)
         return datetime.strftime("Y-%m-%d")
+    return None
+
+def load_local_data(ticker, start, end) -> Optional[pd.DataFrame]:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.join(current_dir, "..", "..")
+    file_path = os.path.join(root, "datasets", f"{ticker}", f"{ticker}_{start}_{end}")
+    if os.path.exists(file_path):
+        return pd.read_csv(file_path)
     return None
