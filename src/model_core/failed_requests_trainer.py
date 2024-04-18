@@ -18,9 +18,12 @@ class FailedRequestsTrainer(Trainer):
         self
     ) -> Optional[FailedQueue]:
         try:
+            queue_len = await FailedQueue.all().count()
+            if queue_len == 0:
+                return None
             queue_item = await FailedQueue.get()
         except (MultipleObjectsReturned, DoesNotExist) as e:
-            make_log("FAILED_REQUESTS_TRAINER", 30, "trainer_workflow.log", f"Queue is empty? {FailedQueue.all().count()}")
+            make_log("FAILED_REQUESTS_TRAINER", 30, "trainer_workflow.log", f"Error retrieving queue item: {str(e)}. \n Is Queue empty? {queue_len}")
             
         if queue_item:
             make_log(
