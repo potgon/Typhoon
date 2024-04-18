@@ -8,9 +8,9 @@ from utils.logger import make_log
 from window_generator import WindowGenerator
 
 
-def data_init(ticker: str, start: str, end: str) -> Optional[pd.DataFrame]:
+def data_init(ticker: str, start: str, end: str, interval: str) -> Optional[pd.DataFrame]:
     #df = pd.read_csv(filepath)
-    df = yf.download(ticker, start=start if start else get_datetimes("start"), end=end if end else get_datetimes("end"))
+    df = yf.download(ticker, start=start if start else get_datetimes("start"), end=end if end else get_datetimes("end"), interval=interval if interval else "1d")
     if df.empty():
         make_log("WINDOW_PIPELINE", 40, "data_pipeline.log", f"Couldn't download data for {ticker}")
         raise TypeError
