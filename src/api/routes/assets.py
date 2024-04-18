@@ -4,7 +4,7 @@ import yfinance as yf
 from tortoise.exceptions import IncompleteInstanceError, IntegrityError
 
 from database.models import Asset
-from api.schemas import AssetModel, AssetCheck
+from api.schemas import AssetModel
 from utils.logger import make_log
 
 router = APIRouter()

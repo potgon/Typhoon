@@ -82,11 +82,22 @@ class Queue(Model):
     model_type = fields.ForeignKeyField("models.ModelType", on_delete=fields.CASCADE)
     created_at = fields.DatetimeField(auto_now_add=True)
     priority = fields.BooleanField(default=False)
-    failed_fetch = fields.BooleanField(default=False)
-    failed_fetch_date = fields.DatetimeField()
 
     class Meta:
         ordering = ["priority", "created_at"]
 
+    def __str__(self):
+        return f"{self.user.email} - {self.asset.name} - {self.model_type.model_name}"
+
+class FailedQueue(Model):
+    id = fields.IntField(pk=True)
+    user = fields.ForeignKeyField("models.User", on_delete=fields.CASCADE)
+    asset = fields.ForeignKeyField("models.Asset", on_delete=fields.CASCADE)
+    model_type = fields.ForeignKeyField("models.ModelType", on_delete=fields.CASCADE)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ["created_at"]
+        
     def __str__(self):
         return f"{self.user.email} - {self.asset.name} - {self.model_type.model_name}"
