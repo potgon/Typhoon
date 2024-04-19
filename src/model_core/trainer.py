@@ -6,7 +6,7 @@ from keras.callbacks import History
 from typing import Optional, ByteString
 
 from model_core.model_builders.model_base import ModelBase
-from model_core.model_builders.model_factory import ModelFactory
+from model_core.model_utils.model_factory import ModelFactory
 from database.models import TrainedModel, ModelType, Queue
 from utils.logger import make_log
 
@@ -20,21 +20,19 @@ class Trainer:
         self.current_model_instance: ModelBase = None  # Model Builder Instance
         self.current_trained_model = None  # Keras Model
 
-    async def _get_next_queue_item(
-        self
-    ) -> Optional[Queue]:
+    async def _get_next_queue_item(self) -> Optional[Queue]:
         """Uses self.priority_counter to retrieve the next priority or non-priority item from the queue
 
         Returns:
             Optional[Queue]: Queue instance
         """
-        
+
         queue_item = (
-                await Queue.filter(priority=1 if self.priority_counter < 5 else 0)
-                .order_by("created_at")
-                .first()
-            )
-        
+            await Queue.filter(priority=1 if self.priority_counter < 5 else 0)
+            .order_by("created_at")
+            .first()
+        )
+
         if queue_item:
             self._manage_prio_counter(queue_item.priority)
             make_log(
@@ -116,7 +114,7 @@ class Trainer:
                 "trainer_workflow.log",
                 queue_error,
             )
-            raise TypeError(queue_error)  # Catch this in service module
+            raise TypeError(queue_error)  # Caught in service module
         built_model = ModelFactory.get_built_model(
             self.current_request.model_type, self.current_request.asset
         )
@@ -128,7 +126,7 @@ class Trainer:
                 "trainer_workflow.log",
                 model_error,
             )
-            raise TypeError(queue_error)  # Catch this in service module
+            raise TypeError(model_error)  # Caught in service module
         self.current_model_instance = built_model
         self.current_trained_model = self._compile_and_fit(
             self.current_model_instance.model, self.current_model_instance.window

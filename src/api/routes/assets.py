@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Union, Dict
 import yfinance as yf
-from tortoise.exceptions import IncompleteInstanceError, IntegrityError
 
 from database.models import Asset
 from api.schemas import AssetModel
@@ -67,7 +66,7 @@ async def bulk_add(tickers: Union[str, List[str]]) -> Dict[str, Dict[str, str]]:
     if valid_assets:
         await Asset.bulk_create([Asset(**asset) for asset in valid_assets])
         for asset in valid_assets:
-            if not Asset.filter(ticker=asset["ticker"]).exists():
+            if not await Asset.exists(ticker=asset["ticker"]):
                 response[asset["ticker"]] = "Data could not be stored"
                 continue
             response[asset["ticker"]] = "Data stored"

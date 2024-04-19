@@ -1,7 +1,7 @@
 import tensorflow as tf
 import json
 
-from .model_base import ModelBase
+from model_core.model_builders.model_base import ModelBase
 
 
 class LSTMModel(ModelBase):
@@ -32,9 +32,6 @@ class LSTMModel(ModelBase):
             "description": description,
             "default_hyperparameters": json.dumps(default_hyperparameters),
             "default_model_architecture": {
-                "Layers": {
-                    "Layer1": "LSTM",
-                    "Layer2": "Dense(1)"
-                }
+                "Layers": {"Layer1": "LSTM", "Layer2": "Dense(1)"}
             },
         }

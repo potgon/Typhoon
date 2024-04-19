@@ -50,16 +50,28 @@ async def service_loop() -> None:
 
 
 async def check_failed_requests() -> None:
-    make_log("FAILED_REQUESTS_SERVICE", 20, "trainer_service.log" "Initiating check on failed requests table...")
+    make_log(
+        "FAILED_REQUESTS_SERVICE",
+        20,
+        "trainer_service.log" "Initiating check on failed requests table...",
+    )
     trainer = FailedRequestsTrainer()
     while True:
         queue_len = await FailedQueue.all().count()
         if queue_len == 0:
-            make_log("FAILED_REQUESTS_SERVICE", 30, "trainer_service.log" "Failed requests table is empty, stopping...")
+            make_log(
+                "FAILED_REQUESTS_SERVICE",
+                30,
+                "trainer_service.log" "Failed requests table is empty, stopping...",
+            )
             break
         try:
             trainer.train()
-            make_log("FAILED_REQUESTS_SERVICE", 20, "trainer_service.log" "Training current request...")
+            make_log(
+                "FAILED_REQUESTS_SERVICE",
+                20,
+                "trainer_service.log" "Re-training previously failed request...",
+            )
         except TypeError as e:
             make_log(
                 "FAILED_REQUESTS_SERVICE",
@@ -70,9 +82,13 @@ async def check_failed_requests() -> None:
             manage_failed_request(trainer.current_request)
             continue
         trainer.evaluate()
-        make_log("FAILED_REQUESTS_SERVICE", 20, "trainer_service.log" "Performing evaluation metrics...")
+        make_log(
+            "FAILED_REQUESTS_SERVICE",
+            20,
+            "trainer_service.log" "Performing evaluation metrics...",
+        )
         model = trainer.save_model()
-        make_log("FAILED_REQUESTS_SERVICE", 20, "trainer_service.log" "Performing evaluation metrics...")
+        make_log("FAILED_REQUESTS_SERVICE", 20, "trainer_service.log" "Saving model...")
         if model is None:
             make_log(
                 "FAILED_REQUESTS_SERVICE",
@@ -80,12 +96,27 @@ async def check_failed_requests() -> None:
                 "trainer_error.log",
                 "Error saving model, continuing with service...",
             )
-    make_log("FAILED_REQUESTS_SERVICE", 20, "trainer_service.log", "Failed requests checked, exiting service...")
+    make_log(
+        "FAILED_REQUESTS_SERVICE",
+        20,
+        "trainer_service.log",
+        "Failed requests checked, exiting service...",
+    )
+
 
 async def manage_failed_request(request: Queue) -> None:
-    make_log("TRAINER_SERVICE", 20, "trainer_service.log", f"Managing failed request, REQUEST: {request.id}, {request.user_id}, {request.asset_id}, {request.model_type_id}")
+    make_log(
+        "TRAINER_SERVICE",
+        20,
+        "trainer_service.log",
+        f"Managing failed request, REQUEST: {request.id}, {request.user_id}, {request.asset_id}, {request.model_type_id}",
+    )
     try:
-        await FailedQueue.save(asset_id=request.asset_id, model_type_id=request.model_type_id, user_id=request.user_id)
+        await FailedQueue.save(
+            asset_id=request.asset_id,
+            model_type_id=request.model_type_id,
+            user_id=request.user_id,
+        )
     except (IncompleteInstanceError, IntegrityError) as e:
         make_log(
             "TRAINER_SERVICE",
