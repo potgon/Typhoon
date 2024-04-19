@@ -14,8 +14,8 @@ async def read_all_assets():
     asset_queryset = await Asset.all()
     if asset_queryset is None:
         raise HTTPException(
-            status_code=500, detail="Server error: assets could not be retrieved"
-        )
+            status_code=500,
+            detail="Server error: assets could not be retrieved")
     return asset_queryset
 
 
@@ -28,7 +28,8 @@ async def read_asset(ticker: str):
 
 
 @router.post("/bulk-add")
-async def bulk_add(tickers: Union[str, List[str]]) -> Dict[str, Dict[str, str]]:
+async def bulk_add(tickers: Union[str, List[str]]
+                   ) -> Dict[str, Dict[str, str]]:
     if isinstance(tickers, str):
         tickers = [tickers]
 

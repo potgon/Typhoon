@@ -22,9 +22,9 @@ class LSTMModel(ModelBase):
     def to_dict(self):
         default_hyperparameters = {"units": self.units}
         description = """
-        The Long Short-Term Memory (LSTM) model is a type of recurrent neural network (RNN) 
-        designed to capture long-term dependencies in sequential data. 
-        Unlike traditional RNNs, LSTM networks are equipped with memory cells that can maintain information over extended time intervals, 
+        The Long Short-Term Memory (LSTM) model is a type of recurrent neural network (RNN)
+        designed to capture long-term dependencies in sequential data.
+        Unlike traditional RNNs, LSTM networks are equipped with memory cells that can maintain information over extended time intervals,
         allowing them to effectively learn and remember patterns in time series, text, and other sequential data
         """
         return {

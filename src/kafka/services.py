@@ -16,7 +16,9 @@ class KafkaQueueMessage:
     asset_id: int
     model_type_id: int
 
+
 TOPIC = os.getenv("MODEL_QUEUE_TRAIN_TOPIC")
+
 
 class KafkaProducerSingleton(metaclass=Singleton):
     def __init__(self):
@@ -66,10 +68,10 @@ async def queue_consumer_loop():
                         f"Kafka consumer error: {msg.error()}",
                     )
                     break
-                
-                
+
                 try:
-                    data = KafkaQueueMessage(**json.loads(msg.value().decode("utf-8")))
+                    data = KafkaQueueMessage(
+                        **json.loads(msg.value().decode("utf-8")))
                 except json.JSONDecodeError:
                     make_log(
                         "KAFKA_CONSUMER",
@@ -78,7 +80,7 @@ async def queue_consumer_loop():
                         "Error decoding JSON request data",
                     )
                     continue
-                
+
                 user_id = data.user_id
                 asset_id = data.asset_id
                 model_type_id = data.model_type_id
@@ -116,7 +118,10 @@ async def queue_consumer_loop():
 async def queue_producer_call(msg) -> bool:
     producer = KafkaProducerSingleton().get_producer()
     try:
-        producer.produce(TOPIC, msg.encode("utf-8"), on_delivery=delivery_callback)
+        producer.produce(
+            TOPIC,
+            msg.encode("utf-8"),
+            on_delivery=delivery_callback)
         producer.flush()
     except Exception:
         return False

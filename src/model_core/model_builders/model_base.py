@@ -3,6 +3,7 @@ from typing import Dict
 
 from model_utils.window_pipeline import data_processing
 
+
 class ModelBase(ABC):
     def __init__(self, asset):
         self.window = data_processing(asset)

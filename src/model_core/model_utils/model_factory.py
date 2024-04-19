@@ -13,11 +13,17 @@ MODEL_MAPPING = Dict[str, Type[ModelBase]] = {
 
 class ModelFactory:
     @staticmethod
-    async def get_built_model(model_type_id: int, **kwargs) -> Optional[ModelBase]:
+    async def get_built_model(
+            model_type_id: int,
+            **kwargs) -> Optional[ModelBase]:
         model_type = await ModelType.filter(id=model_type_id).first()
 
         if not model_type:
-            make_log("MODEL_FACTORY", 40, "trainer_workflow.log", "No model type found")
+            make_log(
+                "MODEL_FACTORY",
+                40,
+                "trainer_workflow.log",
+                "No model type found")
             return None
 
         model_constructor = MODEL_MAPPING.get(model_type.model_name, None)

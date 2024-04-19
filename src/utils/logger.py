@@ -27,7 +27,8 @@ def setup_logger(name: str, level: int, log_file: str) -> logging.Logger:
 
     if not logger.handlers:
         log_path = os.path.join(log_env_dir, log_file)
-        log_handler = RotatingFileHandler(log_path, maxBytes=1e6, backupCount=1)
+        log_handler = RotatingFileHandler(
+            log_path, maxBytes=1e6, backupCount=1)
         log_handler.setFormatter(formatter)
         log_handler.setLevel(level)
         logger.addHandler(log_handler)

@@ -12,8 +12,8 @@ async def read_all_models():
     model_queryset = await ModelType.all()
     if model_queryset is None:
         raise HTTPException(
-            status_code=500, detail="Server error: model types could not be retrieved"
-        )
+            status_code=500,
+            detail="Server error: model types could not be retrieved")
     return model_queryset
 
 

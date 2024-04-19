@@ -68,7 +68,12 @@ class Trainer:
             f"Queue priority counter adjusted: {self.priority_counter}",
         )
 
-    def _compile_and_fit(self, model, window, epochs=20, patience=2) -> History:
+    def _compile_and_fit(
+            self,
+            model,
+            window,
+            epochs=20,
+            patience=2) -> History:
         """Compiles and fits current model instance to given data window
 
         Args:
@@ -94,7 +99,11 @@ class Trainer:
             validation_data=window.val,
             callbacks=[early_stopping],
         )
-        make_log("TRAINER", 20, "trainer_workflow.log", "Model compiled and fit")
+        make_log(
+            "TRAINER",
+            20,
+            "trainer_workflow.log",
+            "Model compiled and fit")
 
         return history
 
@@ -129,9 +138,12 @@ class Trainer:
             raise TypeError(model_error)  # Caught in service module
         self.current_model_instance = built_model
         self.current_trained_model = self._compile_and_fit(
-            self.current_model_instance.model, self.current_model_instance.window
-        )
-        make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully built")
+            self.current_model_instance.model, self.current_model_instance.window)
+        make_log(
+            "TRAINER",
+            20,
+            "trainer_workflow.log",
+            "Model successfully built")
 
     def evaluate(self) -> None:
         """Stores performance metrics of current trained model"""
@@ -141,7 +153,11 @@ class Trainer:
         self.performance = self.current_trained_model.evaluate(
             self.current_model_instance.window.test, verbose=0
         )
-        make_log("TRAINER", 20, "trainer_workflow.log", "Model evaluation successful")
+        make_log(
+            "TRAINER",
+            20,
+            "trainer_workflow.log",
+            "Model evaluation successful")
 
     async def save_model(self) -> Optional[TrainedModel]:
         """Saves current trained model to database
@@ -173,7 +189,11 @@ class Trainer:
                 f"Error saving model",
             )
             return None
-        make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully saved")
+        make_log(
+            "TRAINER",
+            20,
+            "trainer_workflow.log",
+            "Model successfully saved")
         return model
 
     # async def save_temp_model(self) -> Optional[TempModel]:
@@ -213,7 +233,11 @@ class Trainer:
         async with aiofiles.open(save_path, "rb") as file:
             serialized_model = await file.read()
         os.remove(save_path)
-        make_log("TRAINER", 20, "trainer_workflow.log", "Model successfully serialized")
+        make_log(
+            "TRAINER",
+            20,
+            "trainer_workflow.log",
+            "Model successfully serialized")
         return serialized_model
 
     async def _save_new_model_type(self, model_dict) -> None:

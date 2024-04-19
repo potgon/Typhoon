@@ -40,8 +40,14 @@ class TrainedModel(Model):
     model_type = fields.ForeignKeyField(
         "models.ModelType", null=True, on_delete=fields.CASCADE
     )
-    user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
-    asset = fields.ForeignKeyField("models.Asset", null=True, on_delete=fields.CASCADE)
+    user = fields.ForeignKeyField(
+        "models.User",
+        null=True,
+        on_delete=fields.CASCADE)
+    asset = fields.ForeignKeyField(
+        "models.Asset",
+        null=True,
+        on_delete=fields.CASCADE)
     model_name = fields.CharField(max_length=50)
     training_timestamp = fields.DatetimeField(auto_now_add=True)
     performance_metrics = fields.JSONField()
@@ -60,8 +66,14 @@ class TempModel(Model):
     model_type = fields.ForeignKeyField(
         "models.ModelType", null=True, on_delete=fields.CASCADE
     )
-    user = fields.ForeignKeyField("models.User", null=True, on_delete=fields.CASCADE)
-    asset = fields.ForeignKeyField("models.Asset", null=True, on_delete=fields.CASCADE)
+    user = fields.ForeignKeyField(
+        "models.User",
+        null=True,
+        on_delete=fields.CASCADE)
+    asset = fields.ForeignKeyField(
+        "models.Asset",
+        null=True,
+        on_delete=fields.CASCADE)
     model_name = fields.CharField(max_length=50)
     training_timestamp = fields.DatetimeField(auto_now_add=True)
     performance_metrics = fields.JSONField()
@@ -79,7 +91,8 @@ class Queue(Model):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField("models.User", on_delete=fields.CASCADE)
     asset = fields.ForeignKeyField("models.Asset", on_delete=fields.CASCADE)
-    model_type = fields.ForeignKeyField("models.ModelType", on_delete=fields.CASCADE)
+    model_type = fields.ForeignKeyField(
+        "models.ModelType", on_delete=fields.CASCADE)
     created_at = fields.DatetimeField(auto_now_add=True)
     priority = fields.BooleanField(default=False)
 
@@ -94,7 +107,8 @@ class FailedQueue(Model):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField("models.User", on_delete=fields.CASCADE)
     asset = fields.ForeignKeyField("models.Asset", on_delete=fields.CASCADE)
-    model_type = fields.ForeignKeyField("models.ModelType", on_delete=fields.CASCADE)
+    model_type = fields.ForeignKeyField(
+        "models.ModelType", on_delete=fields.CASCADE)
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:

@@ -6,6 +6,7 @@ from database.models import FailedQueue
 from model_core.trainer import Trainer
 from utils.logger import make_log
 
+
 class FailedRequestsTrainer(Trainer):
     def __init__(self):
         self.val_performance = {}
@@ -13,7 +14,7 @@ class FailedRequestsTrainer(Trainer):
         self.current_request: FailedQueue = None  # Failed requests Queue Instance
         self.current_model_instance: ModelBase = None  # Model Builder Instance
         self.current_trained_model = None  # Keras Model
-        
+
     async def _get_next_queue_item(
         self
     ) -> Optional[FailedQueue]:
@@ -23,8 +24,12 @@ class FailedRequestsTrainer(Trainer):
                 return None
             queue_item = await FailedQueue.get()
         except (MultipleObjectsReturned, DoesNotExist) as e:
-            make_log("FAILED_REQUESTS_TRAINER", 30, "trainer_workflow.log", f"Error retrieving queue item: {str(e)}. \n Is Queue empty? {queue_len}")
-            
+            make_log(
+                "FAILED_REQUESTS_TRAINER",
+                30,
+                "trainer_workflow.log",
+                f"Error retrieving queue item: {str(e)}. \n Is Queue empty? {queue_len}")
+
         if queue_item:
             make_log(
                 "FAILED_REQUESTS_TRAINER",

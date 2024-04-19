@@ -60,18 +60,14 @@ async def check_failed_requests() -> None:
         queue_len = await FailedQueue.all().count()
         if queue_len == 0:
             make_log(
-                "FAILED_REQUESTS_SERVICE",
-                30,
-                "trainer_service.log" "Failed requests table is empty, stopping...",
-            )
+                "FAILED_REQUESTS_SERVICE", 30, "trainer_service.log"
+                "Failed requests table is empty, stopping...", )
             break
         try:
             trainer.train()
             make_log(
-                "FAILED_REQUESTS_SERVICE",
-                20,
-                "trainer_service.log" "Re-training previously failed request...",
-            )
+                "FAILED_REQUESTS_SERVICE", 20, "trainer_service.log"
+                "Re-training previously failed request...", )
         except TypeError as e:
             make_log(
                 "FAILED_REQUESTS_SERVICE",
@@ -88,7 +84,11 @@ async def check_failed_requests() -> None:
             "trainer_service.log" "Performing evaluation metrics...",
         )
         model = trainer.save_model()
-        make_log("FAILED_REQUESTS_SERVICE", 20, "trainer_service.log" "Saving model...")
+        make_log(
+            "FAILED_REQUESTS_SERVICE",
+            20,
+            "trainer_service.log"
+            "Saving model...")
         if model is None:
             make_log(
                 "FAILED_REQUESTS_SERVICE",

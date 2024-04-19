@@ -11,10 +11,14 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRES_MINUTES = 30
 
 
-def create_access_token(subject: Union[str, Any], expires_delta: timedelta) -> str:
+def create_access_token(
+        subject: Union[str, Any], expires_delta: timedelta) -> str:
     expire = datetime.now(timezone.utc) + expires_delta
     to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, os.getenv("SECRET_KEY"), algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode,
+        os.getenv("SECRET_KEY"),
+        algorithm=ALGORITHM)
     return encoded_jwt
 
 

@@ -24,6 +24,8 @@ async def create_user(user_data: UserCreate) -> Optional[UserResponse]:
         return UserResponse(id=user.id, email=user.email)
     except IntegrityError as e:
         make_log(
-            "USERS", 40, "api_error.log", f"Integrity error creating user: {str(e)}"
-        )
+            "USERS",
+            40,
+            "api_error.log",
+            f"Integrity error creating user: {str(e)}")
         raise HTTPException(status_code=400, detail="Email already registered")

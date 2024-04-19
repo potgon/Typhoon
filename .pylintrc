@@ -63,7 +63,7 @@ ignore-patterns=
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis). It
 # supports qualified module names, as well as Unix pattern matching.
-ignored-modules=django.http, django.db
+ignored-modules=
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
@@ -81,7 +81,7 @@ limit-inference-results=100
 
 # List of plugins (as comma separated values of python module names) to load,
 # usually to register additional checkers.
-load-plugins=pylint_django
+load-plugins=
 
 # Pickle collected data for later comparisons.
 persistent=yes
