@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from model_utils.window_pipeline import data_processing
+from model_core.model_utils.window_pipeline import data_processing
 
 
 class ModelBase(ABC):

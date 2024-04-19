@@ -3,6 +3,7 @@ from typing import List
 
 from database.models import ModelType
 from api.schemas import ModelTypeModel
+from model_core.model_builders.model_base import ModelBase
 
 router = APIRouter()
 
@@ -12,8 +13,8 @@ async def read_all_models():
     model_queryset = await ModelType.all()
     if model_queryset is None:
         raise HTTPException(
-            status_code=500,
-            detail="Server error: model types could not be retrieved")
+            status_code=500, detail="Server error: model types could not be retrieved"
+        )
     return model_queryset
 
 
