@@ -35,52 +35,41 @@ async def bulk_add(tickers: Union[str, List[str]]) -> Dict[str, Dict[str, str]]:
 
     response = {}
 
-    info_dict = {}
+    valid_assets = []
     for ticker in tickers:
-        try:
-            data = yf.Ticker(ticker).info
-        except Exception as e:
-            make_log(
-                "ASSETS",
-                40,
-                "api_error.log",
-                f"Error fetching data for {ticker}: {str(e)}",
-            )
-            response[ticker] = "Error fetching data"
-            continue
+        # try:
+        data = yf.Ticker(ticker).info  # Not sure if this raises an exception
+        # except Exception as e:
+        #     make_log(
+        #         "ASSETS",
+        #         40,
+        #         "api_error.log",
+        #         f"Error fetching data for {ticker}: {str(e)}",
+        #     )
+
         if data.get("shortName") is None:
             response[ticker] = "No data found. Ticker might be invalid"
             continue
-        info_dict[ticker] = {
-            "ticker": ticker,
-            "name": data.get("shortName", None),
-            "asset_type": data.get("quoteType", None),
-            "sector": data.get("sector", None),
-        }
-        try:
-            await Asset(
-                ticker=ticker,
-                name=data.get("shortName", None),
-                asset_type=data.get("quoteType", None),
-                sector=data.get("sector", None),
-            ).save()
-            response[ticker] = "Data stored"
-        except (IncompleteInstanceError) as e:
-            make_log(
-                "ASSETS",
-                40,
-                "api_error.log",
-                f"Error saving asset data to database for {ticker}: {str(e)}",
-            )
-            response[ticker] = "Error saving to database"
+
+        if await Asset.exists(ticker=ticker):
+            response[ticker] = "Asset already in database"
             continue
-        except (IntegrityError) as e:
-            make_log(
-                "ASSETS",
-                40,
-                "api_error.log",
-                f"Asset already present in database? {str(e)}",
-            )
-            response[ticker] = "Asset already present in database"
-            continue
+
+        valid_assets.append(
+            {
+                "ticker": ticker,
+                "name": data.get("shortName", None),
+                "asset_type": data.get("quoteType", None),
+                "sector": data.get("sector", None),
+            }
+        )
+
+    if valid_assets:
+        await Asset.bulk_create([Asset(**asset) for asset in valid_assets])
+        for asset in valid_assets:
+            if not Asset.filter(ticker=asset["ticker"]).exists():
+                response[asset["ticker"]] = "Data could not be stored"
+                continue
+            response[asset["ticker"]] = "Data stored"
+
     return {"message": response}
