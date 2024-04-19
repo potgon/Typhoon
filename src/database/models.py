@@ -29,7 +29,7 @@ class ModelType(Model):
     model_name = fields.CharField(max_length=50, unique=True)
     description = fields.TextField()
     default_hyperparameters = fields.JSONField()
-    default_model_architecture = fields.TextField()
+    default_model_architecture = fields.JSONField()
 
     def __str__(self):
         return self.model_name
@@ -46,7 +46,7 @@ class TrainedModel(Model):
     training_timestamp = fields.DatetimeField(auto_now_add=True)
     performance_metrics = fields.JSONField()
     hyperparameters = fields.JSONField()
-    model_architecture = fields.TextField()
+    model_architecture = fields.JSONField()
     serialized_model = fields.BinaryField()
     training_performance = fields.JSONField()
     status = fields.CharField(max_length=25, default="Inactive")
@@ -66,7 +66,7 @@ class TempModel(Model):
     training_timestamp = fields.DatetimeField(auto_now_add=True)
     performance_metrics = fields.JSONField()
     hyperparameters = fields.JSONField()
-    model_architecture = fields.TextField()
+    model_architecture = fields.JSONField()
     serialized_model = fields.BinaryField()
     training_performance = fields.JSONField()
     status = fields.CharField(max_length=25, default="Temporal")
@@ -89,15 +89,16 @@ class Queue(Model):
     def __str__(self):
         return f"{self.user.email} - {self.asset.name} - {self.model_type.model_name}"
 
+
 class FailedQueue(Model):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField("models.User", on_delete=fields.CASCADE)
     asset = fields.ForeignKeyField("models.Asset", on_delete=fields.CASCADE)
     model_type = fields.ForeignKeyField("models.ModelType", on_delete=fields.CASCADE)
     created_at = fields.DatetimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ["created_at"]
-        
+
     def __str__(self):
         return f"{self.user.email} - {self.asset.name} - {self.model_type.model_name}"
