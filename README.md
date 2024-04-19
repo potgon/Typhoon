@@ -7,7 +7,7 @@ Typhoon is meant to be integrated within my own, in development, Django platform
 
 ## Typhoon Workflow
 
-![Alt text](workflow/png/ATP_Typhoon_Workflow.png)
+![Alt text](workflow/png/Typhoon_Workflow_v2.png)
 
 ## License
 ATP is licensed under the MIT License. See the LICENSE file for more details.
