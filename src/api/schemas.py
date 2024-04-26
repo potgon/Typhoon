@@ -6,8 +6,14 @@ class ModelTypeModel(BaseModel):
     id: int
     model_name: str
     description: str
-    default_hyperparameters: str
-    default_model_architecture: str
+    default_hyperparameters: dict
+    default_model_architecture: dict
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
+
+
+class ModelEnqueueRequest(BaseModel):
+    ticker: str
+    model_id: int
     model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
 
@@ -26,6 +32,7 @@ class UserResponse(BaseModel):
 
 
 class UserCreate(BaseModel):
+    username: str
     email: str
     password: str
 
@@ -33,3 +40,7 @@ class UserCreate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    username: str

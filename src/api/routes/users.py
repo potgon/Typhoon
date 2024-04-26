@@ -14,18 +14,20 @@ router = APIRouter()
 async def create_user(user_data: UserCreate) -> Optional[UserResponse]:
     hashed_password = get_password_hash(user_data.password)
     try:
-        user = await User.create(email=user_data.email, password=hashed_password)
+        user = await User.create(
+            username=user_data.username, email=user_data.email, password=hashed_password
+        )
         make_log(
             "USERS",
             20,
             "api_error.log",
-            f"User: {user_data.email} successfully created",
+            f"User: {user_data.username} successfully created",
         )
         return UserResponse(id=user.id, email=user.email)
     except IntegrityError as e:
         make_log(
-            "USERS",
-            40,
-            "api_error.log",
-            f"Integrity error creating user: {str(e)}")
-        raise HTTPException(status_code=400, detail="Email already registered")
+            "USERS", 40, "api_error.log", f"Integrity error creating user: {str(e)}"
+        )
+        raise HTTPException(
+            status_code=400, detail="Username or email already registered"
+        )
